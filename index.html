@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로또 번호 추출기 — 통계 보고 굴려서 뽑기</title>
+<meta name="description" content="동행복권 공식 지난 당첨 기록으로 자주 나온 번호와 오래 쉰 번호를 보고, 추첨하듯 공을 굴려 로또 번호를 뽑아요. 무료, 가입 없음.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#draw">본문으로 건너뛰기</a>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#">로또 번호 추출기</a>
+    <nav aria-label="바로가기">
+      <a href="#latest">최근 당첨</a>
+      <a href="#stats">번호 통계</a>
+      <a href="#how">뽑는 방법</a>
+      <a href="#mine">내 번호</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" id="draw" aria-labelledby="hero-title">
+    <div class="hero-text">
+      <h1 id="hero-title">자주 나온 번호, 오래 쉰 번호.<br>보고 고르고, 굴려서 뽑기.</h1>
+      <p class="lede">동행복권 공식 기록 <strong data-total>1~…회차</strong>로 계산했어요. 번호 용지의 칸이 진할수록 많이 나온 번호예요.</p>
+
+      <form class="picker" id="picker">
+        <fieldset>
+          <legend>뽑는 방식</legend>
+          <div class="seg" role="radiogroup">
+            <label><input type="radio" name="mode" value="even" checked><span>그냥 추첨</span></label>
+            <label><input type="radio" name="mode" value="hot"><span>자주 나온 쪽으로</span></label>
+            <label><input type="radio" name="mode" value="cold"><span>오래 쉰 쪽으로</span></label>
+          </div>
+          <p class="mode-note" id="mode-note">45개 공이 모두 같은 확률이에요. 실제 추첨기와 같아요.</p>
+        </fieldset>
+        <fieldset>
+          <legend>몇 줄 뽑을까요?</legend>
+          <div class="seg seg-num" role="radiogroup">
+            <label><input type="radio" name="lines" value="1"><span>1</span></label>
+            <label><input type="radio" name="lines" value="2"><span>2</span></label>
+            <label><input type="radio" name="lines" value="3"><span>3</span></label>
+            <label><input type="radio" name="lines" value="4"><span>4</span></label>
+            <label><input type="radio" name="lines" value="5" checked><span>5</span></label>
+          </div>
+        </fieldset>
+        <button class="go" type="submit" id="go">번호 뽑기</button>
+      </form>
+
+      <div class="result" id="result" aria-live="polite">
+        <p class="result-empty">아직 뽑은 번호가 없어요. 방식과 줄 수를 고르고 <b>번호 뽑기</b>를 눌러 보세요.</p>
+      </div>
+    </div>
+
+    <figure class="slip" aria-labelledby="slip-cap">
+      <div class="slip-head">
+        <span>로또 6/45</span>
+        <span class="slip-sub" id="slip-sub">번호별 나온 횟수</span>
+      </div>
+      <div class="slip-grid" id="slip-grid" role="grid" aria-label="1부터 45까지 번호별 나온 횟수"></div>
+      <figcaption id="slip-cap" class="slip-cap">
+        <span class="legend"><i class="lg lo"></i>적게</span>
+        <span class="legend"><i class="lg hi"></i>많이 나옴</span>
+        <span class="legend"><i class="lg mk"></i>방금 뽑은 첫 줄</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section class="band" id="latest" aria-labelledby="latest-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="latest-title">최근 당첨 번호</h2>
+        <div class="round-nav">
+          <button type="button" id="prev-round" aria-label="이전 회차">‹</button>
+          <span id="round-label">…회</span>
+          <button type="button" id="next-round" aria-label="다음 회차">›</button>
+        </div>
+      </div>
+      <div class="latest" id="latest-balls"></div>
+      <p class="fine" id="latest-date"></p>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="stats" aria-labelledby="stats-title">
+    <div class="sec-head">
+      <h2 id="stats-title">번호 통계</h2>
+      <div class="seg seg-sm" role="radiogroup" aria-label="계산 범위">
+        <label><input type="radio" name="range" value="all" checked><span>전체 회차</span></label>
+        <label><input type="radio" name="range" value="100"><span>최근 100회</span></label>
+        <label><input type="radio" name="range" value="20"><span>최근 20회</span></label>
+      </div>
+    </div>
+    <p class="sec-lede">보너스 번호는 빼고, 당첨 번호 6개만 셌어요. 위 용지도 이 범위로 바뀌어요.</p>
+
+    <div class="stat-cols">
+      <div class="stat-box">
+        <h3>가장 많이 나온 번호</h3>
+        <ol class="rank" id="hot-list"></ol>
+      </div>
+      <div class="stat-box">
+        <h3>가장 오래 안 나온 번호</h3>
+        <ol class="rank" id="cold-list"></ol>
+      </div>
+    </div>
+
+    <div class="bars-wrap">
+      <h3>1~45번 나온 횟수</h3>
+      <div class="bars" id="bars" role="img"></div>
+      <div class="bars-axis" aria-hidden="true"><span>1</span><span>10</span><span>20</span><span>30</span><span>40</span><span>45</span></div>
+    </div>
+  </section>
+
+  <section class="band" id="how" aria-labelledby="how-title">
+    <div class="wrap how">
+      <h2 id="how-title">어떻게 뽑나요?</h2>
+      <dl class="how-list">
+        <div>
+          <dt>그냥 추첨</dt>
+          <dd>45개 공이 모두 같은 확률로 나와요. 한 번 나온 공은 다시 넣지 않아서 한 줄에 같은 번호가 두 번 나오지 않아요. 실제 추첨기와 같은 방식이에요.</dd>
+        </div>
+        <div>
+          <dt>자주 나온 쪽으로</dt>
+          <dd>고른 범위에서 많이 나온 번호일수록 공을 더 많이 넣고 굴려요. 예를 들어 200번 나온 번호는 100번 나온 번호보다 뽑힐 기회가 두 배예요.</dd>
+        </div>
+        <div>
+          <dt>오래 쉰 쪽으로</dt>
+          <dd>마지막으로 나온 뒤 오래 지난 번호일수록 공을 더 많이 넣어요. 오래 쉰 만큼 뽑힐 기회가 커져요.</dd>
+        </div>
+      </dl>
+      <div class="honest">
+        <p><b>당첨을 보장하지 않아요.</b> 로또는 매 회차 공이 새로 무작위로 나와서, 지난 기록은 다음 번호를 알려 주지 않아요. 어떤 방식으로 뽑아도 1등 확률은 똑같이 8,145,060분의 1이에요. 통계는 재미와 참고로만 봐 주세요.</p>
+        <p class="fine">데이터 출처: <a href="https://www.dhlottery.co.kr/lt645/result" target="_blank" rel="noopener">동행복권 공식 추첨결과</a> · <span data-total>…</span> 반영 · 새 회차는 추첨이 끝나면 자동으로 더해져요.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap sec" id="mine" aria-labelledby="mine-title">
+    <div class="sec-head">
+      <h2 id="mine-title">내가 저장한 번호</h2>
+      <button type="button" class="ghost" id="clear-mine" hidden>모두 지우기</button>
+    </div>
+    <p class="sec-lede" id="mine-lede">뽑은 번호에서 <b>저장</b>을 누르면 여기 모여요. 이 기기의 브라우저에만 저장돼요.</p>
+    <ul class="mine" id="mine-list"></ul>
+  </section>
+
+  <!-- 후기 자리: 실제 후기가 생기면 여기에 넣는다 (PRD 4번). 지금은 비워 둔다. -->
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>로또 번호 추출기는 동행복권과 관계없는 개인 사이트예요. 무료이고 가입이 없어요.</p>
+    <p>복권은 만 19세 이상만 살 수 있어요. 도박 문제로 고민된다면 국번 없이 <a href="tel:1336">1336</a>(한국도박문제예방치유원)에 전화해 보세요.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js" defer></script>
+</body>
+</html>
