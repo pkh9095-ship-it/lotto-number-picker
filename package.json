@@ -1,0 +1,6 @@
+{
+  "name": "lotto-number-picker",
+  "private": true,
+  "type": "module",
+  "scripts": { "fetch-draws": "node scripts/fetch-draws.mjs" }
+}
